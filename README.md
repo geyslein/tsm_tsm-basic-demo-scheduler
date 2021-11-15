@@ -12,6 +12,23 @@ service in developer mode to trigger the
 
 **Do not use in production!!!**.
 
+# How to start
+
+Start a flask developing server listening on port 5000 on all interfaces
+(which is bad, better use localhost!):
+
+```bash
+python3 src/main.py
+```
+
+Use the docker image to start the server on port 5000 on localhost:
+
+```bash
+docker run -p 127.0.0.1:5000:5000 git.ufz.de:4567/rdm-software/timeseries-management/tsm-basic-demo-scheduler/basic_demo_scheduler:latest
+```
+
+
+
 # How to integrate
 
 Call the one and only `/extractor/run` endpoint with *http* `POST` and a
