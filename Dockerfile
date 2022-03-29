@@ -12,8 +12,7 @@ RUN apt-get -y update \
 
 # add requirements
 COPY src/requirements.txt /tmp/requirements.txt
-RUN pip install --upgrade pip \
-    && pip install \
+RUN pip install \
         --no-cache-dir \
         --no-warn-script-location -r \
         /tmp/requirements.txt
