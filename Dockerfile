@@ -14,7 +14,6 @@ RUN apt-get -y update \
 COPY src/requirements.txt /tmp/requirements.txt
 RUN pip install --upgrade pip \
     && pip install \
-        --user \
         --no-cache-dir \
         --no-warn-script-location -r \
         /tmp/requirements.txt
@@ -26,7 +25,7 @@ FROM base as dist
 # RUN useradd --uid 1000 -m appuser
 
 # Add python packages
-COPY --chown=appuser --from=build /root/.local /home/appuser/.local
+COPY --from=build /usr/local/lib/python3.9/dist-packages /usr/local/lib/python3.9/dist-packages
 
 # Tell docker that all future commands should run as the appuser user
 USER appuser
