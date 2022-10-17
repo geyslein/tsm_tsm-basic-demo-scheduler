@@ -22,8 +22,13 @@ def extractor_run():
     source = d.get('source')
     thing_uuid = d.get('thing_uuid')
 
-    cmd = [
-        'python3', '/home/appuser/app/src/main.py', 'parse',
+    # calling tsm-extractor
+    # see -> tsm-extractor/src/main.py [OPTIONS] command [ARGS]
+    cmd = ['python3', '/home/appuser/app/src/main.py']
+    if options['verbose']:
+        cmd += ['-v']
+    cmd += [
+        'parse',
         '-p', parser,
         '-t', target,
         '-s', source,
@@ -32,8 +37,6 @@ def extractor_run():
         '-u', options['mqtt_user'],
         '-pw', options['mqtt_password'],
     ]
-    if options['verbose']:
-        cmd.append('-v')
 
     r = subprocess.run(
         cmd,
