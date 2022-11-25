@@ -10,7 +10,7 @@ options = {}
 
 
 @api.route('/qaqc/run', methods=['POST'])
-def extractor_run():
+def qaqc_run():
     d = request.json
 
     target = d.get('target')
