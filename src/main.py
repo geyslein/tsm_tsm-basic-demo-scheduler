@@ -22,7 +22,7 @@ def qaqc_run():
     if options['verbose']:
         cmd += ['-v']
     cmd += [
-        'run_qaqc',
+        'run-qaqc',
         '-t', target,
         '-d', thing_uuid,
         '-m', options['mqtt_broker'],
