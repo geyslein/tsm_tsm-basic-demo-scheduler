@@ -9,6 +9,51 @@ api = Flask(__name__)
 options = {}
 
 
+@api.route('/qaqc/run', methods=['POST'])
+def qaqc_run():
+    d = request.json
+
+    target = d.get('target')
+    thing_uuid = d.get('thing_uuid')
+
+    # calling tsm-extractor
+    # see -> tsm-extractor/src/main.py [OPTIONS] command [ARGS]
+    cmd = ['python3', '/home/appuser/app/src/main.py']
+    if options['verbose']:
+        cmd += ['-v']
+    cmd += [
+        'run-qaqc',
+        '-t', target,
+        '-d', thing_uuid,
+        '-m', options['mqtt_broker'],
+        '-u', options['mqtt_user'],
+        '-pw', options['mqtt_password'],
+    ]
+
+    r = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True
+    )
+
+    if r.returncode == 0:
+        logging.info(f"successfully qcqa run for '{target}'")
+    else:
+        ctx = {
+            'code': r.returncode,
+            'err': r.stderr,
+            'out': str(r.stdout),
+        }
+        logging.error(f"qaqc run failed. {ctx=}")
+
+    return json.dumps({
+        'code': r.returncode,
+        'err': r.stderr,
+        'out': str(r.stdout)
+    }), 200 if r.returncode == 0 else 500
+
+
 @api.route('/extractor/run', methods=['POST'])
 def extractor_run():
     # parse -p AnotherCustomParser -t postgresql://postgres:postgres@postgres.example.com/postgres -s https://example.com/ -d ce2b4fb6-d9de-11eb-a236-125e5a40a845
