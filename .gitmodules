@@ -1,0 +1,3 @@
+[submodule "tsm-extractor"]
+	path = tsm-extractor
+	url = git@codebase.helmholtz.cloud:ufz-tsm/tsm-extractor.git
