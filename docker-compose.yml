@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  slurm:
+    build: .
+#    image: giovtorres/docker-centos7-slurm:21.08.0
+    hostname: slurmctl
+    container_name: slurmctl
+    stdin_open: true
+    tty: true
+    environment:
+      PYTHON: "3.9"
+    volumes:
+      - ${PWD}/work:/work
+      - ${PWD}/src:/home/sontsm
