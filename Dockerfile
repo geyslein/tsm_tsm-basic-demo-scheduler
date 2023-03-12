@@ -41,16 +41,38 @@ from build as dist
 
 
 RUN echo /usr/lib/oracle/instantclient_21_3 \
-      > /etc/ld.so.conf.d/oracle-instantclient.conf \
+      > /etc/ld.so.conf.d/oracle-instantclient.conf  \
     && ldconfig
 
-# add and run future commands as USER sontsm (same user as on EVE)
+
+# make /work (like in eve) and make it read and writeable
+RUN mkdir -p /work/sontsm && chmod -R a+rwx /work
+
+# add user sontsm (same user as we have on EVE)
 RUN useradd --uid 1000 -m sontsm
 USER sontsm
 WORKDIR /home/sontsm
 COPY src .
 
-# start slurm cluster mock
+# The entrypoint.sh needs to be run as root, but the
+# webserver and invoked comands should be run as `sontsm`
+# (our eve user). Actually this is not quite easy, because
+# changing the user with `su` either requires a script
+# (current case) or a single command (with -c). In the
+# latter case all given parameters will be interpreted
+# as params for `su`, instead as for the python script.
+# Thats the reason we go for the first case and use a
+# wrapper script (`pipe.sh`), which replace itself with
+# the next following command (`python ...`) and all its
+# parameters by using bash magic (`exec "$@"`).
 USER root
+COPY pipe.sh /pipe.sh
 
-ENTRYPOINT ["/tini", "--", "/usr/local/bin/docker-entrypoint.sh", "/bin/bash"]
+ENTRYPOINT [ \
+    "/tini", "--", \
+    "/usr/local/bin/docker-entrypoint.sh", \
+    "su", "sontsm", "/pipe.sh", "--", \
+    "python3.9", "webapi/server.py" \
+    ]
+
+CMD ["--mqtt-broker", "None"]

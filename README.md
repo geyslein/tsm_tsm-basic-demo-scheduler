@@ -50,3 +50,47 @@ curl -v http://localhost:5000/extractor/run -d '{"parser":"AnotherCustomParser",
 ```
 
 ***Happy parsing!***
+
+
+# How it works
+
+The Docker container run a basic but full-fledged slurm instance and a simple 
+flask webserver.
+
+The server provide two endpoints (URLs), namely `SOME:URL/qaqc/run` and 
+`SOME:URL/extractor/run`. A POST to one of the endpoints, triggers a 
+slurm command (`sbatch`), which schedule a submit script (`submit_script.sh`), 
+which eventually starts the extractor (`tsm-extractor/main.py`), when executed.
+(When the script actually will run, is decided by slurm. Normally this is, 
+as soon as enough resources are available and no other scripts are waiting before us.)
+Finally, the extractor will run either the *data parsing*  or the *quality control*, 
+depending on the endpoint, to which was posted in the first place.
+
+**overview**
+``` 
+webapi/server.py   (2x endpoints)
+    POST to URL: 
+        --> sbatch submit_script.sh 
+            --> job (submit_script.sh)
+                --> python tsm-extractor/main.py
+```
+**details**
+```
+     | Docker service
+     | ==============
+     |
+     | python webapi/server.py   (https://.../qaqc/run  AND  https://.../extractor/run)
+     |                                          |                          |
+     |                      +-------------------+--------------------------+
+     |                      |
+     |                      v
+usr--|----> POST to one of URLs: 
+     |        --> sbatch submit_script.sh  (schedule job)
+     |                          |     
+     |   +----------------------+
+     |   |   
+     |   v   
+     | slurm 
+     |    --> run job (submit_script.sh)
+     |          --> python tsm-extractor/main.py
+```

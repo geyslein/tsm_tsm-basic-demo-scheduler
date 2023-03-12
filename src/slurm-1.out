@@ -1,4 +1,0 @@
-  File "/var/spool/slurmd/job00001/slurm_script", line 18
-    print(f"sleep {n} seconds")
-                             ^
-SyntaxError: invalid syntax
