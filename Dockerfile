@@ -1,4 +1,4 @@
-FROM git.ufz.de:4567/rdm-software/timeseries-management/tsm-extractor/extractor:latest as base
+FROM registry.hzdr.de/ufz-tsm/tsm-extractor:latest as base
 
 FROM base as build
 
