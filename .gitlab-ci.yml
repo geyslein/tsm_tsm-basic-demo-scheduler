@@ -87,15 +87,11 @@ add-release-tags:
 
 add-feature-branch-tags:
   stage: release
-  rules:
-    - if: '$CI_COMMIT_BRANCH != "main"'
-      when: on_success
+  except:
+    - "main"
   image:
     name: gcr.io/go-containerregistry/crane:debug
     entrypoint: [ "" ]
   script:
     - crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - crane tag ${IMAGE_URL}:${CI_JOB_DATE} ${CI_COMMIT_BRANCH}
-  dependencies:
-    - freeze-tag
-    - build-images
