@@ -1,12 +1,23 @@
+from __future__ import annotations
 import subprocess
 import sys
 
+import re
 import click
 import logging
 from flask import Flask, json, request
 
 api = Flask(__name__)
 options = {}
+
+
+def parse_jobnr(s: str) -> int:
+    if not s.startswith("Submitted batch job"):
+        s = ""
+    r = re.search(r'\d+', s)
+    if r:
+        return int(r.group())
+    raise ValueError("No job id found")
 
 
 @api.route('/qaqc/run', methods=['POST'])
@@ -17,8 +28,10 @@ def qaqc_run():
     thing_uuid = d.get('thing_uuid')
 
     # calling tsm-extractor
-    # see -> tsm-extractor/src/main.py [OPTIONS] command [ARGS]
-    cmd = ['python3', '/home/appuser/app/src/main.py']
+    # see -> src/tsm-extractor/src/main.py [OPTIONS] command [ARGS]
+    cmd = [
+        "sbatch", "--job-name=qaqc", "submit_script.sh"
+    ]
     if options['verbose']:
         cmd += ['-v']
     cmd += [
@@ -37,21 +50,15 @@ def qaqc_run():
         universal_newlines=True
     )
 
-    if r.returncode == 0:
-        logging.info(f"successfully qcqa run for '{target}'")
-    else:
-        ctx = {
-            'code': r.returncode,
-            'err': r.stderr,
-            'out': str(r.stdout),
-        }
-        logging.error(f"qaqc run failed. {ctx=}")
+    ctx = dict(code=r.returncode, err=r.stderr, out=str(r.stdout))
 
-    return json.dumps({
-        'code': r.returncode,
-        'err': r.stderr,
-        'out': str(r.stdout)
-    }), 200 if r.returncode == 0 else 500
+    if r.returncode == 0:
+        jobid = parse_jobnr(str(r.stdout))
+        logging.info(f"Successfully scheduled qaqc job. {jobid=}")
+    else:
+        logging.error(f"Scheduling qaqc job failed. {ctx=}")
+
+    return json.dumps(ctx), 200 if r.returncode == 0 else 500
 
 
 @api.route('/extractor/run', methods=['POST'])
@@ -69,7 +76,9 @@ def extractor_run():
 
     # calling tsm-extractor
     # see -> tsm-extractor/src/main.py [OPTIONS] command [ARGS]
-    cmd = ['python3', '/home/appuser/app/src/main.py']
+    cmd = [
+        "sbatch", "--job-name=parse", "submit_script.sh"
+    ]
     if options['verbose']:
         cmd += ['-v']
     cmd += [
@@ -90,23 +99,16 @@ def extractor_run():
         universal_newlines=True
     )
 
-    if r.returncode == 0:
-        logging.info(f"successfully parsed '{source}'")
-    else:
-        ctx = {
-            'code': r.returncode,
-            'err': r.stderr,
-            'out': str(r.stdout),
-            'source': source,
-            'parser': parser
-        }
-        logging.error(f"parsing failed. {ctx=}")
+    ctx = dict(code=r.returncode, err=r.stderr, out=str(r.stdout))
 
-    return json.dumps({
-        'code': r.returncode,
-        'err': r.stderr,
-        'out': str(r.stdout)
-    }), 200 if r.returncode == 0 else 500
+    if r.returncode == 0:
+        jobid = parse_jobnr(str(r.stdout))
+        logging.info(f"Successfully scheduled parsing job. {jobid=}")
+    else:
+        ctx.update(source=source, parser=parser)
+        logging.error(f"Scheduling parsing job failed. {ctx=}")
+
+    return json.dumps(ctx), 200 if r.returncode == 0 else 500
 
 
 @click.command()

@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  eve_mock:
+    build: .
+    # keep hostname set to `slurmctl`.  See README in
+    # base image why this is needed.
+    # this image:  giovtorres/docker-centos7-slurm:21.08.0
+    # development: https://github.com/giovtorres/docker-centos7-slurm
+    hostname: slurmctl
+#    container_name: slurmctl
+#    stdin_open: true
+#    tty: true
+    environment:
+      PYTHON: "3.9"
+    volumes:
+      - ./work:/work
+      - ./src:/home/sontsm
