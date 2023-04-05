@@ -5,7 +5,7 @@ import sys
 import re
 import click
 import logging
-from flask import Flask, json, request
+from flask import Flask, json, request, jsonify
 
 api = Flask(__name__)
 options = {}
@@ -109,6 +109,12 @@ def extractor_run():
         logging.error(f"Scheduling parsing job failed. {ctx=}")
 
     return json.dumps(ctx), 200 if r.returncode == 0 else 500
+
+
+@api.route('/health')
+def health():
+    status = {'status': 'ok'}
+    return jsonify(status)
 
 
 @click.command()
